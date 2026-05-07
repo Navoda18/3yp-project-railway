@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 215 30% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 30% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 30% 15%;
+
+    --primary: 215 70% 25%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 215 30% 15%;
+
+    --muted: 210 25% 94%;
+    --muted-foreground: 215 15% 50%;
+
+    --accent: 215 60% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 145 65% 42%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 35 90% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 214 25% 90%;
+    --input: 214 25% 90%;
+    --ring: 215 70% 25%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  .header-gradient {
+    background: linear-gradient(135deg, hsl(215 70% 18%), hsl(215 55% 32%));
+  }
+  .stat-blue {
+    background: hsl(215 70% 97%);
+    border-left: 3px solid hsl(215 70% 50%);
+  }
+  .stat-green {
+    background: hsl(145 60% 96%);
+    border-left: 3px solid hsl(145 65% 42%);
+  }
+  .stat-red {
+    background: hsl(0 70% 96%);
+    border-left: 3px solid hsl(0 75% 55%);
+  }
+  .stat-purple {
+    background: hsl(260 60% 96%);
+    border-left: 3px solid hsl(260 60% 55%);
+  }
+  .confidence-bar {
+    background: linear-gradient(90deg, hsl(0 75% 55%) 0%, hsl(35 90% 55%) 50%, hsl(145 65% 42%) 100%);
+  }
+  .bottom-nav-active {
+    color: hsl(215 70% 25%);
+  }
+  .glass-card {
+    background: hsla(0, 0%, 100%, 0.85);
+    backdrop-filter: blur(12px);
+  }
+  .pulse-dot {
+    animation: pulse-ring 1.5s ease-out infinite;
+  }
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 hsla(145, 65%, 42%, 0.5); }
+    100% { box-shadow: 0 0 0 10px hsla(145, 65%, 42%, 0); }
+  }
+}

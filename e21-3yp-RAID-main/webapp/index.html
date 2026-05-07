@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>webapp</title>
+    <script>
+      // Restore deep-link route after GitHub Pages serves 404.html.
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var p = params.get("p");
+        if (!p) return;
+
+        params.delete("p");
+        var nextQuery = params.toString();
+        var repoBase = "/e21-3yp-RAID/webapp/";
+        var target = repoBase + p.replace(/^\/+/, "") + (nextQuery ? "?" + nextQuery : "") + window.location.hash;
+        window.history.replaceState(null, "", target);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "sensorId": "IR_Bottom",
+  "deviceId": "esp-001",
+  "timestamp": "2026-04-19T12:00:00Z",
+  "crackDetected": true,
+  "status": "CRACK",
+  "severity": 0.92,
+  "location": {
+    "latitude": 6.9271,
+    "longitude": 79.8612,
+    "valid": true,
+    "satellites": 7
+  }
+}
