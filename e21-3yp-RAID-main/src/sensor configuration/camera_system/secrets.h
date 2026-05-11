@@ -4,10 +4,10 @@
 #include <Arduino.h>
 
 // --- 1. CREDENTIALS ---
-const char* ssid = "Redmi Note 10";
-const char* password = "200170201635";
-const char* botToken = "8453673141:AAHxgehOW__-7LuVvlmm7xqpEcW9zXRj3QA";
-const char* chatId = "1681826822";
+const char* ssid = "SLT-4G-8018";
+const char* password = "200285303000v";
+//const char* botToken = "8453673141:AAHxgehOW__-7LuVvlmm7xqpEcW9zXRj3QA";
+//const char* chatId = "1681826822";
 const char* aws_endpoint = "a141eqbs4ue48l-ats.iot.eu-north-1.amazonaws.com";
 
 // Device/Client ID

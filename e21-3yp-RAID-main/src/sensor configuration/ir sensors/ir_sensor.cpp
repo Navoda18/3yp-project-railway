@@ -29,7 +29,7 @@ namespace
     constexpr IRPinConfig PIN_CONFIG = {4, 3, 2, 6, 1, "ESP32-S3"};
 #else
     // Updated LED IN to Pin 32
-    constexpr IRPinConfig PIN_CONFIG = {25, 26, 27, 14, 34, "ESP32-Classic"};
+    constexpr IRPinConfig PIN_CONFIG = {19, 18, 27, 14, 34, "ESP32-Classic"};
 #endif
 
     void selectOutput(int channel)
