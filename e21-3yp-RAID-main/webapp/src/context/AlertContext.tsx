@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { Client } from "@stomp/stompjs";
+import { Client, Frame } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
 export type Severity = "HIGH" | "MEDIUM" | "LOW";
@@ -153,7 +153,7 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
 
   // Mock update - just updates local state (no API call)
   const updateStatus = (id: number, status: AlertStatus) => {
-    setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
+    setAlerts((prev: CrackAlert[]) => prev.map((a: CrackAlert) => (a.id === id ? { ...a, status } : a)));
     // TODO: Replace with Spring Boot API call:
     // await fetch(`http://localhost:8080/api/alerts/${id}/status`, {
     //   method: "PATCH",
@@ -304,7 +304,7 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
       };
     };
 
-    const wsBase = import.meta.env.VITE_BACKEND_WS_URL ?? "http://localhost:8080/raid-websocket";
+    const wsBase = (import.meta as { env: Record<string, string> }).env.VITE_BACKEND_WS_URL ?? "http://localhost:8080/raid-websocket";
 
     const client = new Client({
       webSocketFactory: () => new SockJS(wsBase),
@@ -315,14 +315,14 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
     });
 
     client.onConnect = () => {
-      client.subscribe("/topic/cracks", (frame) => {
+      client.subscribe("/topic/cracks", (frame: Frame) => {
         try {
           const payload: BackendCrackMessage = JSON.parse(frame.body);
 
-          setAlerts((prev) => [toUiAlert(payload), ...prev].slice(0, 100));
+          setAlerts((prev: CrackAlert[]) => [toUiAlert(payload), ...prev].slice(0, 100));
 
           if (payload.locationValid && payload.latitude !== undefined && payload.longitude !== undefined) {
-            setRobotStatus((prev) => ({
+            setRobotStatus((prev: RobotStatus) => ({
               ...prev,
               online: true,
               lat: Number(payload.latitude),
@@ -334,7 +334,7 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
         }
       });
 
-      client.subscribe("/topic/ultrasonic", (frame) => {
+      client.subscribe("/topic/ultrasonic", (frame: Frame) => {
         try {
           const payload: BackendUltrasonicMessage = JSON.parse(frame.body);
           const ultrasonicAlert = toUltrasonicAlert(payload);
@@ -343,9 +343,9 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
             return;
           }
 
-          setAlerts((prev) => [ultrasonicAlert, ...prev].slice(0, 100));
+          setAlerts((prev: CrackAlert[]) => [ultrasonicAlert, ...prev].slice(0, 100));
 
-          setRobotStatus((prev) => ({
+          setRobotStatus((prev: RobotStatus) => ({
             ...prev,
             online: true,
             lat: ultrasonicAlert.lat,
@@ -357,14 +357,14 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
       });
     };
 
-    client.onStompError = (frame) => {
+    client.onStompError = (frame: Frame) => {
       console.warn("WebSocket connection failed, starting mock ultrasonic alerts generator");
-      
+
       // Fallback: Generate mock ultrasonic alerts when backend is unavailable
       const mockUltrasonicInterval = setInterval(() => {
         const distances = [35.2, 42.5, 48.3, 65.8, 72.1, 89.5, 95.0, 120.0, 150.0];
         const randomDistance = distances[Math.floor(Math.random() * distances.length)];
-        
+
         const mockUltrasonicMessage: BackendUltrasonicMessage = {
           sensorId: "ULTRA_FRONT",
           deviceId: "esp-001",
@@ -372,11 +372,11 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
           distanceCm: randomDistance,
           obstacleDetected: randomDistance <= 50,
         };
-        
+
         const ultrasonicAlert = toUltrasonicAlert(mockUltrasonicMessage);
         if (ultrasonicAlert) {
-          setAlerts((prev) => [ultrasonicAlert, ...prev].slice(0, 100));
-          setRobotStatus((prev) => ({
+          setAlerts((prev: CrackAlert[]) => [ultrasonicAlert, ...prev].slice(0, 100));
+          setRobotStatus((prev: RobotStatus) => ({
             ...prev,
             online: true,
             lat: ultrasonicAlert.lat,
@@ -384,7 +384,7 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
           }));
         }
       }, 5000); // Simulate 5-second publishing interval
-      
+
       // Store interval ID for cleanup
       (client as any)._mockUltrasonicInterval = mockUltrasonicInterval;
     };

@@ -48,6 +48,28 @@ e:\RAID\project page\e21-3yp-RAID\src\certificate.pem.crt
 # Secrets and certificates
 application.properties
 *.p12
+
+# Sensitive credential files
+src/**/secrets.h
+src/**/*.pem.key
+src/**/*.pem.crt
+src/**/*.crt
+src/**/*.key
+*.pem
+*.key
+*.crt
+secrets.h
+credentials.json
+config.json
+.env.secrets
+src/main.cpp  # Contains hardcoded credentials
+src/mock_esp32.py  # Contains certificate references
+
+# AWS and API credentials
+aws-credentials
+.aws/
+*.jks
+*.p8
 *.key
 *.crt
 *.pem
