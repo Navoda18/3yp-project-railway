@@ -11,8 +11,8 @@
 
 // ================= Configuration =================
 #define CAMERA_TRIGGER_PIN 4
-const char *ssid = "SLT-4G-8018";
-const char *password = "200285303000v";
+const char *ssid = "Tharu02";
+const char *password = "magene12";
 const char *mqtt_server = "a32k5hknxy25aw-ats.iot.eu-north-1.amazonaws.com";
 const char *CLIENT_ID = "esp32";
 const String DEVICE_ID = "esp-001";
