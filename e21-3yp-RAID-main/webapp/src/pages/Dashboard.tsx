@@ -5,6 +5,7 @@ import {
   ChevronRight, LogOut, Camera, AlertTriangle, Grid3x3, List
 } from "lucide-react";
 
+// TEMPORARY DEMO MODE - AUTH DISABLED
 import { useAuth } from "@/context/AuthContext";
 import { useTelemetry } from "@/hooks/useTelemetry";
 import { useUltrasonicTelemetry } from "@/hooks/useUltrasonicTelemetry";
@@ -214,8 +215,8 @@ export default function Dashboard() {
 
           {/* Load Balance Status */}
           <div className={`mt-4 px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 ${isBalanced
-              ? 'bg-emerald-900 text-emerald-200 border border-emerald-700'
-              : 'bg-amber-900 text-amber-200 border border-amber-700'
+            ? 'bg-emerald-900 text-emerald-200 border border-emerald-700'
+            : 'bg-amber-900 text-amber-200 border border-amber-700'
             }`}>
             <span className={`inline-flex h-2 w-2 rounded-full ${isBalanced ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
             {isBalanced ? '✓ Load Balanced' : '⚠ Imbalanced Load'} • Variance: {loadBalance}%
@@ -332,8 +333,8 @@ export default function Dashboard() {
               <p className="text-xs text-slate-400 mt-0.5">HC-SR04 Ultrasonic Sensor • esp-001</p>
             </div>
             <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold ${ultrasonic.isConnected
-                ? 'bg-emerald-900 text-emerald-300 border border-emerald-700'
-                : 'bg-slate-700 text-slate-400'
+              ? 'bg-emerald-900 text-emerald-300 border border-emerald-700'
+              : 'bg-slate-700 text-slate-400'
               }`}>
               <span className={`inline-flex h-2 w-2 rounded-full ${ultrasonic.isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
                 }`}></span>
@@ -344,8 +345,8 @@ export default function Dashboard() {
           {/* Latest Reading */}
           {ultrasonic.liveUltrasonic.length > 0 && (
             <div className={`px-6 py-4 border-b border-slate-100 ${ultrasonic.liveUltrasonic[0].obstacleDetected
-                ? 'bg-rose-50'
-                : 'bg-emerald-50'
+              ? 'bg-rose-50'
+              : 'bg-emerald-50'
               }`}>
               <div className="flex items-center justify-between">
                 <div>
@@ -359,8 +360,8 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <div className={`px-4 py-2 rounded-xl text-sm font-bold ${ultrasonic.liveUltrasonic[0].obstacleDetected
-                    ? 'bg-rose-100 text-rose-700 border border-rose-200'
-                    : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                  ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                  : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                   }`}>
                   {ultrasonic.liveUltrasonic[0].obstacleDetected ? '⚠️ OBSTACLE' : '✅ CLEAR'}
                 </div>
@@ -395,8 +396,8 @@ export default function Dashboard() {
                     </td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded text-xs font-bold ${event.obstacleDetected
-                          ? 'bg-rose-100 text-rose-700'
-                          : 'bg-emerald-100 text-emerald-700'
+                        ? 'bg-rose-100 text-rose-700'
+                        : 'bg-emerald-100 text-emerald-700'
                         }`}>
                         {event.obstacleDetected ? '⚠️ Obstacle' : '✅ Clear'}
                       </span>
@@ -417,10 +418,10 @@ export default function Dashboard() {
 /**
  * Detailed view component showing all crack detections for a single device
  */
-function DetailedDeviceView({ 
-  deviceId, 
-  deviceName, 
-  isReal, 
+function DetailedDeviceView({
+  deviceId,
+  deviceName,
+  isReal,
   liveCracks,
   onCrackClick
 }: {
@@ -486,10 +487,10 @@ function DetailedDeviceView({
                   </td>
                   <td className="p-4">
                     <span className={`px-2 py-1 rounded text-xs font-bold ${crack.status === 'confirmed'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : crack.status === 'pending'
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-slate-100 text-slate-600'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : crack.status === 'pending'
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-slate-100 text-slate-600'
                       }`}>
                       {crack.status}
                     </span>

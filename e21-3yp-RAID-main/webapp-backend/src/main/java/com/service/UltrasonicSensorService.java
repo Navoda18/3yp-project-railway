@@ -10,6 +10,10 @@ import com.mapper.UltrasonicSensorMapper;
 import com.model.UltrasonicSensorData;
 import com.repositary.imp.UltrasonicSensorRepositoryImpl;
 
+/*
+// TEMPORARILY DISABLED - Ultrasonic table is missing
+// Will re-enable after creating ultrasonic_sensor_logs table in DynamoDB
+
 @Service
 public class UltrasonicSensorService {
 	private final UltrasonicSensorRepositoryImpl repository;
@@ -46,3 +50,4 @@ public class UltrasonicSensorService {
 		return mapper.toDTO(saved);
 	}
 }
+*/

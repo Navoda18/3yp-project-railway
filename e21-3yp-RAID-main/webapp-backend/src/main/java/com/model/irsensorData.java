@@ -1,5 +1,6 @@
 package com.model;
 
+import java.util.List;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -26,6 +27,8 @@ public class irsensorData {
     private int uptime;
     private double latitude;
     private double longitude;
+    private List<Double> irArray;
+    private double irSensor;
 
     /**
      * @DynamoDbPartitionKey: Marks this field as the Primary Key (PK) for the
@@ -131,6 +134,24 @@ public class irsensorData {
 
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+
+    @DynamoDbAttribute("irArray")
+    public List<Double> getIrArray() {
+        return irArray;
+    }
+
+    public void setIrArray(List<Double> irArray) {
+        this.irArray = irArray;
+    }
+
+    @DynamoDbAttribute("irSensor")
+    public double getIrSensor() {
+        return irSensor;
+    }
+
+    public void setIrSensor(double irSensor) {
+        this.irSensor = irSensor;
     }
 }
 

@@ -1,5 +1,7 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
+// TEMPORARY DEMO MODE - AUTH DISABLED
+// Supabase import kept for compatibility, but not used for auth
 import { supabase } from "@/lib/supabase";
 
 interface AuthContextType {
@@ -11,43 +13,44 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// TEMPORARY DEMO MODE - Mock authenticated user
+const mockUser = {
+  id: "demo-user",
+  email: "demo@example.com",
+  user_metadata: { role: "admin" },
+  app_metadata: {},
+  aud: "authenticated",
+  confirmation_sent_at: null,
+  sign_in_provider: "email",
+  role: "authenticated",
+  updated_at: new Date().toISOString(),
+  phone: "",
+  last_sign_in_at: new Date().toISOString(),
+} as unknown as User;
+
+const mockSession = {
+  access_token: "demo-token",
+  token_type: "Bearer",
+  expires_in: 3600,
+  refresh_token: "demo-refresh-token",
+  user: mockUser,
+} as unknown as Session;
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  // Important: Start loading as true so the app doesn't render until Supabase replies
-  const [loading, setLoading] = useState(true); 
+  // TEMPORARY DEMO MODE - Always authenticated, no session checks
+  const [user] = useState<User | null>(mockUser);
+  const [session] = useState<Session | null>(mockSession);
+  const [loading] = useState(false);
 
-  useEffect(() => {
-    // 1. Check if the user is already logged in when the app first loads
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // 2. Set up a listener that watches for any login or logout events globally
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Clean up the listener when the component unmounts
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
+  // TEMPORARY DEMO MODE - No-op signOut for demo
   const signOut = async () => {
-    await supabase.auth.signOut();
-    // No need to manually clear state here; the onAuthStateChange listener 
-    // will detect the sign out and update the user/session state automatically.
+    console.log("TEMPORARY DEMO MODE: signOut called but disabled for testing");
+    // In demo mode, we don't actually sign out
   };
 
   return (
     <AuthContext.Provider value={{ user, session, loading, signOut }}>
-      {/* Do not render the protected routes until Supabase confirms the session state */}
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

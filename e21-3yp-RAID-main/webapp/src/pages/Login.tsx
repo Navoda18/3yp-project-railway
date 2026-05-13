@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 // Import the Supabase client you created in the previous step
-import { supabase } from "@/lib/supabase"; 
+import { supabase } from "@/lib/supabase";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -25,33 +25,9 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    
-    try {
-      // 1. Authenticate with Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
-
-      // 2. Handle Supabase errors (like wrong password)
-      if (error) {
-        throw error; 
-      }
-
-      // 3. Success! Save the token and redirect
-      if (data.session) {
-        // Optional: Save the token specifically to send to your AWS API later
-        localStorage.setItem('adminToken', data.session.access_token);
-        
-        toast.success("Welcome back!");
-        navigate("/dashboard");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Invalid credentials. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    // TEMPORARY: Bypass login for testing IR pipeline
+    toast.success("Welcome back!");
+    navigate("/dashboard");
   };
 
   return (

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { X, MapPin, Clock, CheckCircle, XCircle, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CrackEvent } from "@/hooks/useTelemetry";
+import { formatSriLankanTimeOnly, formatSriLankanTime } from "@/lib/timeUtils";
+
 
 interface CrackDetailModalProps {
   crack: CrackEvent | null;
@@ -77,7 +79,7 @@ export default function CrackDetailModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        
+
         {/* ================= HEADER ================= */}
         <div className="sticky top-0 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 px-6 py-6 flex items-center justify-between border-b-4 border-blue-600">
           <div className="flex-1">
@@ -87,13 +89,12 @@ export default function CrackDetailModal({
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-              crack.status === 'approved'
-                ? 'bg-emerald-200 text-emerald-700'
-                : crack.status === 'ignored'
+            <span className={`px-3 py-1 rounded-full text-xs font-bold ${crack.status === 'approved'
+              ? 'bg-emerald-200 text-emerald-700'
+              : crack.status === 'ignored'
                 ? 'bg-slate-200 text-slate-600'
                 : 'bg-amber-200 text-amber-700'
-            }`}>
+              }`}>
               {crack.status?.toUpperCase() || 'PENDING'}
             </span>
             <button
@@ -107,7 +108,7 @@ export default function CrackDetailModal({
 
         {/* ================= CONTENT ================= */}
         <div className="p-6 space-y-6">
-          
+
           {/* ================= IMAGE SECTION ================= */}
           <div>
             <div className="flex items-center gap-2 mb-3">
@@ -115,7 +116,7 @@ export default function CrackDetailModal({
               <h3 className="text-sm font-bold text-slate-900 uppercase">Captured Image</h3>
               {crack.timestamp && (
                 <span className="text-xs text-slate-500 ml-auto">
-                  {new Date(crack.timestamp).toLocaleString()}
+                  {formatSriLankanTime(crack.timestamp)}
                 </span>
               )}
             </div>
@@ -156,7 +157,7 @@ export default function CrackDetailModal({
               </button>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              
+
               {/* Track Marker */}
               <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
                 <p className="text-xs text-blue-600 font-bold uppercase mb-1">Track Marker</p>
@@ -176,11 +177,22 @@ export default function CrackDetailModal({
             </div>
           </div>
 
+          {/* ================= IR SENSOR CHART ================= */}
+          {(crack.irArray || crack.irSensor !== undefined) && (
+            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+              <h3 className="text-sm font-bold text-slate-900 uppercase mb-4 flex items-center gap-2">
+                <span className="text-lg">⚡</span>
+                IR Sensor Array
+              </h3>
+              {/* <IRSensorChart irArray={crack.irArray} irSensor={crack.irSensor} /> */}
+            </div>
+          )}
+
           {/* ================= SENSOR READINGS ================= */}
           <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
             <h3 className="text-sm font-bold text-slate-900 uppercase mb-4 flex items-center gap-2">
               <span className="text-lg">⚡</span>
-              Sensor Readings
+              Detection Details
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -190,7 +202,7 @@ export default function CrackDetailModal({
               <div>
                 <p className="text-xs text-slate-600 font-bold uppercase mb-1">Detection Time</p>
                 <p className="text-sm font-semibold text-slate-900">
-                  {crack.timestamp ? new Date(crack.timestamp).toLocaleTimeString() : 'N/A'}
+                  {crack.timestamp ? formatSriLankanTimeOnly(crack.timestamp) : 'N/A'}
                 </p>
               </div>
             </div>
@@ -198,13 +210,12 @@ export default function CrackDetailModal({
 
           {/* ================= ANALYSIS ================= */}
           {crack.description && (
-            <div className={`rounded-lg p-4 border-l-4 ${
-              crack.status === 'approved'
-                ? 'bg-emerald-50 border-emerald-400'
-                : crack.status === 'ignored'
+            <div className={`rounded-lg p-4 border-l-4 ${crack.status === 'approved'
+              ? 'bg-emerald-50 border-emerald-400'
+              : crack.status === 'ignored'
                 ? 'bg-slate-50 border-slate-400'
                 : 'bg-amber-50 border-amber-400'
-            }`}>
+              }`}>
               <h3 className="text-sm font-bold text-slate-900 uppercase mb-2">Analysis Details</h3>
               <p className="text-sm text-slate-700 leading-relaxed">
                 {crack.description}
@@ -214,16 +225,15 @@ export default function CrackDetailModal({
 
           {/* ================= ACTION BUTTONS ================= */}
           <div className="flex gap-3 pt-4 border-t border-slate-200">
-            
+
             {/* Confirm Button */}
             <Button
               onClick={handleApprove}
               disabled={isUpdating || crack.status === 'approved'}
-              className={`flex-1 font-bold py-3 flex items-center justify-center gap-2 text-lg ${
-                crack.status === 'approved'
-                  ? 'bg-emerald-200 text-emerald-700 cursor-not-allowed'
-                  : 'bg-emerald-500 hover:bg-emerald-600 text-white'
-              }`}
+              className={`flex-1 font-bold py-3 flex items-center justify-center gap-2 text-lg ${crack.status === 'approved'
+                ? 'bg-emerald-200 text-emerald-700 cursor-not-allowed'
+                : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                }`}
             >
               <CheckCircle size={20} />
               {crack.status === 'approved' ? 'Confirmed' : 'Confirm'}
@@ -233,11 +243,10 @@ export default function CrackDetailModal({
             <Button
               onClick={handleIgnore}
               disabled={isUpdating || crack.status === 'ignored'}
-              className={`flex-1 font-bold py-3 flex items-center justify-center gap-2 text-lg ${
-                crack.status === 'ignored'
-                  ? 'bg-slate-300 text-slate-600 cursor-not-allowed'
-                  : 'bg-slate-500 hover:bg-slate-600 text-white'
-              }`}
+              className={`flex-1 font-bold py-3 flex items-center justify-center gap-2 text-lg ${crack.status === 'ignored'
+                ? 'bg-slate-300 text-slate-600 cursor-not-allowed'
+                : 'bg-slate-500 hover:bg-slate-600 text-white'
+                }`}
             >
               <XCircle size={20} />
               {crack.status === 'ignored' ? 'Ignored' : 'Ignore'}

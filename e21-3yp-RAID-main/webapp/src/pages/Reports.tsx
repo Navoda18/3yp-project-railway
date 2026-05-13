@@ -72,11 +72,10 @@ const Reports = () => {
               <button
                 key={tab}
                 onClick={() => setActive(tab)}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-                  active === tab
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${active === tab
                     ? "header-gradient text-primary-foreground shadow-md"
                     : "bg-card border border-border text-foreground hover:bg-secondary"
-                }`}
+                  }`}
               >
                 {tab}
               </button>
@@ -119,7 +118,7 @@ const Reports = () => {
                       <div>
                         <p className="text-muted-foreground font-semibold">Location (GPS)</p>
                         <p className="text-foreground">
-                          Lat: {crack.gps?.latitude ?? crack.gps?.lat ?? 'N/A'}, 
+                          Lat: {crack.gps?.latitude ?? crack.gps?.lat ?? 'N/A'},
                           Long: {crack.gps?.longitude ?? crack.gps?.lng ?? 'N/A'}
                         </p>
                       </div>
@@ -131,9 +130,9 @@ const Reports = () => {
                     {crack.imageUrl && (
                       <div className="mt-2">
                         <p className="text-muted-foreground font-semibold mb-1">Evidence Image</p>
-                        <img 
-                          src={crack.imageUrl} 
-                          alt="Crack detection" 
+                        <img
+                          src={crack.imageUrl}
+                          alt="Crack detection"
                           className="w-full h-32 object-cover rounded-md border border-border"
                           crossOrigin="anonymous"
                         />
@@ -142,7 +141,7 @@ const Reports = () => {
                     )}
                     <div className="mt-2 text-[10px] text-muted-foreground flex justify-between">
                       <span>Severity: {crack.severity}</span>
-                      <span>Time: {new Date(crack.timestamp).toLocaleString()}</span>
+                      <span>Time: {crack.timestamp ? new Date(crack.timestamp).toLocaleString() : 'N/A'}</span>
                     </div>
                   </div>
                 ))}
@@ -150,7 +149,7 @@ const Reports = () => {
             ) : (
               <p className="text-sm text-muted-foreground italic">No detections reported in this period.</p>
             )}
-            
+
             <div className="flex justify-between text-sm pt-2 border-t border-border/30">
               <span className="text-muted-foreground">Fleet Status</span>
               <span className="font-semibold text-emerald-500">

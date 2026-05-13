@@ -1,6 +1,8 @@
 // IRSensorDataDTO.java
 package com.dto.sensor;
 
+import java.util.List;
+
 public class IRSensorDataDTO {
 
     private String sensorId;
@@ -11,6 +13,8 @@ public class IRSensorDataDTO {
     private double severity;
     private String imageUrl;
     private LocationDTO location;
+    private List<Double> irArray;
+    private double irSensor;
 
     // Empty constructor needed by Spring
     public IRSensorDataDTO() {
@@ -109,6 +113,22 @@ public class IRSensorDataDTO {
 
     public void setLocation(LocationDTO location) {
         this.location = location;
+    }
+
+    public List<Double> getIrArray() {
+        return irArray;
+    }
+
+    public void setIrArray(List<Double> irArray) {
+        this.irArray = irArray;
+    }
+
+    public double getIrSensor() {
+        return irSensor;
+    }
+
+    public void setIrSensor(double irSensor) {
+        this.irSensor = irSensor;
     }
 }
 

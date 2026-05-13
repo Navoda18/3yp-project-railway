@@ -10,6 +10,8 @@ export interface CrackEvent {
   image_url?: string; // Alternative field name
   timestamp?: string;
   status?: string;
+  irArray?: number[];  // IR sensor array (8 values, 0-4095 ADC range)
+  irSensor?: number;   // IR sensor average or min value
   [key: string]: any; // Allow other properties returned by the backend
 }
 
@@ -114,7 +116,7 @@ export function useTelemetry(deviceId: string, sensorId: string) {
     const stompClient = new Client({
       webSocketFactory: () => new SockJS("http://localhost:8080/raid-websocket"),
       reconnectDelay: 5000,
-      
+
       onConnect: () => {
         setIsConnected(true);
         console.log(`Connected to telemetry stream: ${deviceId}/${sensorId}`);
@@ -124,16 +126,16 @@ export function useTelemetry(deviceId: string, sensorId: string) {
           const rawData = JSON.parse(message.body);
           const safeCrackEvent = normalizeCrackEvent(rawData);
 
-            setLiveCracks(prev => [safeCrackEvent, ...prev].slice(0, 100));
+          setLiveCracks(prev => [safeCrackEvent, ...prev].slice(0, 100));
         });
 
         // Subscribe to Camera detections (with image URLs)
         stompClient.subscribe(`/topic/camera-detections`, (message) => {
-            const cameraData = JSON.parse(message.body);
+          const cameraData = JSON.parse(message.body);
           const cameraCrackEvent = normalizeCrackEvent(cameraData);
 
-            console.log("Camera detection received with imageUrl:", cameraCrackEvent.imageUrl);
-            setLiveCracks(prev => [cameraCrackEvent, ...prev].slice(0, 100));
+          console.log("Camera detection received with imageUrl:", cameraCrackEvent.imageUrl);
+          setLiveCracks(prev => [cameraCrackEvent, ...prev].slice(0, 100));
         });
       },
       onDisconnect: () => setIsConnected(false),
@@ -143,8 +145,8 @@ export function useTelemetry(deviceId: string, sensorId: string) {
     stompClient.activate();
 
     return () => {
-        stompClient.deactivate();
-        setIsConnected(false);
+      stompClient.deactivate();
+      setIsConnected(false);
     };
   }, [deviceId, sensorId]);
 

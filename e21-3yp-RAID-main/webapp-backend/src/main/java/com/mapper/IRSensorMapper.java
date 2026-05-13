@@ -28,6 +28,8 @@ public class IRSensorMapper {
                 new LocationDTO(entity.getLatitude(), entity.getLongitude()));
 
         dto.setImageUrl(entity.getImageUrl());
+        dto.setIrArray(entity.getIrArray());
+        dto.setIrSensor(entity.getIrSensor());
         return dto;
     }
 
@@ -43,6 +45,8 @@ public class IRSensorMapper {
         entity.setCrackDetected(dto.isCrackDetected());
         entity.setStatus(dto.getStatus());
         entity.setImageUrl(dto.getImageUrl());
+        entity.setIrArray(dto.getIrArray());
+        entity.setIrSensor(dto.getIrSensor());
 
         if (dto.getLocation() != null) {
             entity.setLatitude(dto.getLocation().getLat());

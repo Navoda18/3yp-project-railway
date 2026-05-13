@@ -14,6 +14,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.dto.sensor.UltrasonicSensorDataDTO;
 import com.service.UltrasonicSensorService;
 
+/*
+// TEMPORARILY DISABLED - Ultrasonic table is missing
+// Will re-enable after creating ultrasonic_sensor_logs table in DynamoDB
+
 @RestController
 @RequestMapping("/api/ultrasonic")
 @CrossOrigin(originPatterns = "*")
@@ -47,3 +51,4 @@ public class UltrasonicSensorController {
 		return saved;
 	}
 }
+*/

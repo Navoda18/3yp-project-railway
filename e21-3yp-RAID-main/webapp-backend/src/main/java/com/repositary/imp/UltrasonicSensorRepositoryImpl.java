@@ -16,6 +16,10 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
+/*
+// TEMPORARILY DISABLED - Ultrasonic table is missing
+// Will re-enable after creating ultrasonic_sensor_logs table in DynamoDB
+
 @Repository
 public class UltrasonicSensorRepositoryImpl extends UltrasonicSensorRepository {
 	private final DynamoDbTable<UltrasonicSensorData> table;
@@ -52,3 +56,4 @@ public class UltrasonicSensorRepositoryImpl extends UltrasonicSensorRepository {
 		return data;
 	}
 }
+*/

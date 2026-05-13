@@ -59,8 +59,16 @@ public class IRSensorRepositoryImpl implements IRSensorRepository {
                 .scanIndexForward(false)
                 .build();
 
+        // DEBUG: Log the query parameters
+        System.out.println("DEBUG: DynamoDB Query - sensorId(partition)=" + sensorId + ", deviceId(filter)=" + deviceId);
+        
         // Run the query and return as a List
-        return table.query(request).items().stream().toList();
+        List<irsensorData> results = table.query(request).items().stream().toList();
+        
+        // DEBUG: Log the results
+        System.out.println("DEBUG: DynamoDB returned " + results.size() + " items");
+        
+        return results;
     }
 
     @Override

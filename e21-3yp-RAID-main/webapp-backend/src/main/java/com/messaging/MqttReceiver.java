@@ -66,7 +66,7 @@ public class MqttReceiver {
 }
 
     private boolean isCrackPayload(JsonNode node) {
-        return node.has("crackDetected") || node.has("minValue");
+        return node.has("crackDetected") || node.has("crack_detected") || node.has("irArray");
     }
 
     private boolean isCameraPayload(JsonNode node) {
@@ -90,19 +90,21 @@ public class MqttReceiver {
      */
 
     private void handleIRSensorMessage(String rawJsonPayload) throws Exception {
-        // 1. Convert MQTT JSON to Java DTO
+        // 1. Parse JSON into DTO
         IRSensorDataDTO liveCrackData = objectMapper.readValue(rawJsonPayload, IRSensorDataDTO.class);
 
-        // 2. Check if conversion was successful (null safety)
         if (liveCrackData == null) {
             System.err.println("Failed to parse MQTT payload into IRSensorDataDTO");
             return;
         }
 
-        // 3. BROADCAST TO REACT: Push the DTO down the WebSocket to anyone listening
+        // 2. Broadcast to frontend via WebSocket
         messagingTemplate.convertAndSend("/topic/cracks", liveCrackData);
-
         System.out.println("Broadcasted live crack data to Web UI: " + liveCrackData.getSensorId());
+
+        // 3. Save to DynamoDB (was missing before!)
+        irSensorService.saveSensorData(liveCrackData);
+        System.out.println("Saved IR sensor data to DynamoDB: " + liveCrackData.getSensorId());
     }
 
     /*

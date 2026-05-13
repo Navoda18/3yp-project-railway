@@ -42,6 +42,13 @@ public class IRSensorService {
 
         // 1. Ask the repository for the filtered data
         List<irsensorData> rawData = repository.getCracksByDeviceAndSensor(deviceId, sensorId);
+        
+        // DEBUG: Log what we got from DynamoDB
+        System.out.println("DEBUG: Querying DynamoDB for deviceId=" + deviceId + ", sensorId=" + sensorId);
+        System.out.println("DEBUG: Found " + rawData.size() + " records from DynamoDB");
+        if (!rawData.isEmpty()) {
+            System.out.println("DEBUG: First record: " + rawData.get(0));
+        }
 
         // 2. Map the heavy entities to lightweight DTOs
         return rawData.stream()
