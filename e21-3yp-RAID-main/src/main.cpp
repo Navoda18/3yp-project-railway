@@ -305,13 +305,18 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     StaticJsonDocument<512> doc;
     DeserializationError error = deserializeJson(doc, payload, length);
 
-    if (!error && waitingForCamera)
-    {
-      String url = doc["image_url"].as<String>();
-      Serial.println("Received S3 URL from Camera!");
-      publishUnifiedAlert(url, lastIrScanResult); // Publish the final row with IR values!
-      waitingForCamera = false;
-    }
+   if (!error && waitingForCamera)
+{
+    // ── ADD THIS ─────────────────────────────────────
+    Serial.printf("⏱️  [T4] URL received: %lu ms\n", millis());
+    Serial.printf("⏱️  Total wait time: %lu ms\n", millis() - cameraWaitStart);
+    // ─────────────────────────────────────────────────
+
+    String url = doc["image_url"].as<String>();
+    Serial.println("Received S3 URL from Camera!");
+    publishUnifiedAlert(url, lastIrScanResult);
+    waitingForCamera = false;
+}
   }
 }
 
@@ -468,23 +473,29 @@ void loop()
   // Triggers if a crack is found AND 2 seconds have passed since the last alert
   // SCENARIO A: The Interrupt (Hardware Trigger + Wait for Image)
   if (crack_detected && !waitingForCamera && (now - lastCriticalAlert > 3000))
-  {
+{
     lastCriticalAlert = now;
     lastHeartbeat = now;
 
-    // 1. FIRE THE HARDWARE TRIGGER (Zero Latency)
+    // ── ADD THESE TIMING LOGS ────────────────────────
+    unsigned long t1 = millis();
+    Serial.printf("\n⏱️  [T1] Crack confirmed: %lu ms\n", t1);
+    // ─────────────────────────────────────────────────
+
     digitalWrite(CAMERA_TRIGGER_PIN, HIGH);
     delay(50);
     digitalWrite(CAMERA_TRIGGER_PIN, LOW);
 
-    // 2. Save the IR state and start the waiting timer
-    lastIrScanResult = irScan; // Store full result
+    // ── ADD THIS ─────────────────────────────────────
+    Serial.printf("⏱️  [T2] Trigger fired: %lu ms\n", millis());
+    // ─────────────────────────────────────────────────
+
+    lastIrScanResult = irScan;
     savedIrMinValue = irScan.minValue;
     waitingForCamera = true;
     cameraWaitStart = now;
-
-    Serial.println("Hardware triggered! Waiting for Camera to return S3 URL...");
-  }
+    Serial.println("Waiting for Camera S3 URL...");
+}
 
   // SCENARIO A.2: The Timeout (If camera crashes or fails to upload)
   if (waitingForCamera && (now - cameraWaitStart > 60000))

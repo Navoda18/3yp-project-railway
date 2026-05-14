@@ -4,79 +4,51 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include "esp_camera.h"
-#include "img_converters.h"      // for frame2jpg()
+#include "img_converters.h"      // ← ADDED: needed for frame2jpg()
 #include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
 #include "secrets.h"
 
-// ── AI-THINKER PINS ─────────────────────────────────────
-#define PWDN_GPIO_NUM     32
-#define RESET_GPIO_NUM    -1
-#define XCLK_GPIO_NUM      0
-#define SIOD_GPIO_NUM     26
-#define SIOC_GPIO_NUM     27
-#define Y9_GPIO_NUM       35
-#define Y8_GPIO_NUM       34
-#define Y7_GPIO_NUM       39
-#define Y6_GPIO_NUM       36
-#define Y5_GPIO_NUM       21
-#define Y4_GPIO_NUM       19
-#define Y3_GPIO_NUM       18
-#define Y2_GPIO_NUM        5
-#define VSYNC_GPIO_NUM    25
-#define HREF_GPIO_NUM     23
-#define PCLK_GPIO_NUM     22
+// ── CAMERA PINS (AI-THINKER) ─────────────────────────────
+#define PWDN_GPIO_NUM  32
+#define RESET_GPIO_NUM -1
+#define XCLK_GPIO_NUM   0
+#define SIOD_GPIO_NUM  26
+#define SIOC_GPIO_NUM  27
+#define Y9_GPIO_NUM    35
+#define Y8_GPIO_NUM    34
+#define Y7_GPIO_NUM    39
+#define Y6_GPIO_NUM    36
+#define Y5_GPIO_NUM    21
+#define Y4_GPIO_NUM    19
+#define Y3_GPIO_NUM    18
+#define Y2_GPIO_NUM     5
+#define VSYNC_GPIO_NUM 25
+#define HREF_GPIO_NUM  23
+#define PCLK_GPIO_NUM  22
 
 #define HARDWARE_TRIGGER_PIN 13
 
-// ── S3 CONFIG ────────────────────────────────────────────
-const char* S3_BUCKET = "railway-camera-photos";
+// ── S3 CONFIG ─────────────────────────────────────────────
+const char* S3_BUCKET = "railway-camera-photos";   // ← FIXED bucket name
 const char* S3_REGION = "eu-north-1";
 
-// ── GLOBALS ──────────────────────────────────────────────
+// ── GLOBALS ───────────────────────────────────────────────
 volatile bool captureRequested = false;
 WiFiClientSecure net;
 PubSubClient mqttClient(net);
 
-
-
-// ── CAMERA INIT ──────────────────────────────────────────
-bool initCamera() {
-    camera_config_t config;
-    config.ledc_channel = LEDC_CHANNEL_0;
-    config.ledc_timer   = LEDC_TIMER_0;
-    config.pin_d0       = Y2_GPIO_NUM;
-    config.pin_d1       = Y3_GPIO_NUM;
-    config.pin_d2       = Y4_GPIO_NUM;
-    config.pin_d3       = Y5_GPIO_NUM;
-    config.pin_d4       = Y6_GPIO_NUM;
-    config.pin_d5       = Y7_GPIO_NUM;
-    config.pin_d6       = Y8_GPIO_NUM;
-    config.pin_d7       = Y9_GPIO_NUM;
-    config.pin_xclk     = XCLK_GPIO_NUM;
-    config.pin_pclk     = PCLK_GPIO_NUM;
-    config.pin_vsync    = VSYNC_GPIO_NUM;
-    config.pin_href     = HREF_GPIO_NUM;
-    config.pin_sccb_sda = SIOD_GPIO_NUM;
-    config.pin_sccb_scl = SIOC_GPIO_NUM;
-    config.pin_pwdn     = PWDN_GPIO_NUM;
-    config.pin_reset    = RESET_GPIO_NUM;
-    config.xclk_freq_hz = 20000000;
-    config.pixel_format = PIXFORMAT_RGB565;  // GC2145 only supports RGB565
-    config.frame_size   = FRAMESIZE_QVGA;    // 320x240 — keeps JPEG small
-    config.jpeg_quality = 12;
-    config.fb_count     = 1;
-
-    esp_err_t err = esp_camera_init(&config);
-    if (err != ESP_OK) {
-        Serial.printf("Camera init FAILED: 0x%x\n", err);
-        return false;
+// ── INTERRUPT (with 10s cooldown) ────────────────────────
+void IRAM_ATTR onHardwareTrigger() {
+    static unsigned long lastTrigger = 0;
+    unsigned long now = millis();
+    if (now - lastTrigger > 10000) {
+        captureRequested = true;
+        lastTrigger = now;
     }
-    Serial.println("Camera init SUCCESS (GC2145 RGB565 mode)");
-    return true;
 }
 
-// ── S3 UPLOAD ────────────────────────────────────────────
+// ── S3 UPLOAD (with RGB565→JPEG conversion) ──────────────
 String uploadToS3(uint8_t* jpegBuf, size_t jpegLen) {
     String fileName = "crack_" + String(millis()) + ".jpg";
     String url = "https://" + String(S3_BUCKET) + ".s3." +
@@ -88,7 +60,7 @@ String uploadToS3(uint8_t* jpegBuf, size_t jpegLen) {
     HTTPClient http;
     http.begin(url);
     http.addHeader("Content-Type", "image/jpeg");
-    http.setTimeout(30000); // 30 second timeout for mobile hotspot
+    http.setTimeout(30000);
 
     int responseCode = http.PUT(jpegBuf, jpegLen);
 
@@ -105,11 +77,13 @@ String uploadToS3(uint8_t* jpegBuf, size_t jpegLen) {
     return resultUrl;
 }
 
-// ── CAPTURE AND SEND ─────────────────────────────────────
+// ── CAPTURE AND SEND ──────────────────────────────────────
 void captureAndSend() {
-    Serial.println("Starting capture...");
+    // ── TIMING ──────────────────────────────────────────
+    unsigned long camStart = millis();
+    Serial.printf("\n⏱️  [CAM-T1] Capture started: %lu ms\n", camStart);
 
-    // Discard first frame — GC2145 first frame often has green tint
+    // Discard first frame — GC2145 first frame has artifacts
     camera_fb_t* fb = esp_camera_fb_get();
     if (fb) {
         esp_camera_fb_return(fb);
@@ -119,36 +93,43 @@ void captureAndSend() {
     // Capture real frame
     fb = esp_camera_fb_get();
     if (!fb) {
-        Serial.println("Frame capture FAILED");
+        Serial.println("❌ Frame capture FAILED");
         return;
     }
 
+    unsigned long t2 = millis();
+    Serial.printf("⏱️  [CAM-T2] Frame captured: %lu ms\n", t2);
+    Serial.printf("⏱️  Capture time: %lu ms\n", t2 - camStart);
     Serial.printf("Raw frame: %d bytes (RGB565)\n", fb->len);
 
     // ── Convert RGB565 → JPEG ────────────────────────────
     uint8_t* jpegBuf = nullptr;
     size_t   jpegLen = 0;
-
     bool converted = frame2jpg(fb, 80, &jpegBuf, &jpegLen);
 
-    // Return frame buffer immediately — free RAM for HTTP
+    // Free frame buffer BEFORE HTTP — frees 153KB RAM
     esp_camera_fb_return(fb);
 
+    unsigned long t3 = millis();
+    Serial.printf("⏱️  [CAM-T3] JPEG converted: %lu ms\n", t3);
+    Serial.printf("⏱️  Conversion time: %lu ms\n", t3 - t2);
+
     if (!converted || jpegBuf == nullptr || jpegLen == 0) {
-        Serial.println("JPEG conversion FAILED");
+        Serial.println("❌ JPEG conversion FAILED");
         if (jpegBuf) free(jpegBuf);
         return;
     }
-
-    Serial.printf("JPEG converted: %d bytes\n", jpegLen);
+    Serial.printf("JPEG size: %d bytes\n", jpegLen);
 
     // ── Upload to S3 ─────────────────────────────────────
     String s3Url = uploadToS3(jpegBuf, jpegLen);
+    free(jpegBuf); // Free immediately after upload
 
-    // Free JPEG buffer immediately after upload
-    free(jpegBuf);
+    unsigned long t4 = millis();
+    Serial.printf("⏱️  [CAM-T4] S3 upload done: %lu ms\n", t4);
+    Serial.printf("⏱️  Upload time: %lu ms\n", t4 - t3);
 
-    // ── Send URL back to Main Board via MQTT ─────────────
+    // ── Send URL back to Main Board ───────────────────────
     if (s3Url != "FAILED") {
         StaticJsonDocument<256> doc;
         doc["image_url"] = s3Url;
@@ -156,19 +137,21 @@ void captureAndSend() {
         serializeJson(doc, buffer);
 
         if (mqttClient.publish("device/esp-001/camera_url", buffer)) {
-            Serial.println("S3 URL sent to Main Board via MQTT ✅");
+            unsigned long t5 = millis();
+            Serial.printf("⏱️  [CAM-T5] MQTT published: %lu ms\n", t5);
+            Serial.printf("⏱️  TOTAL pipeline: %lu ms\n", t5 - camStart);
+            Serial.println("✅ S3 URL sent to Main Board!");
             Serial.println("URL: " + s3Url);
         } else {
-            Serial.println("MQTT publish FAILED ❌");
+            Serial.println("❌ MQTT publish FAILED");
         }
     } else {
-        Serial.println("S3 failed — not sending URL to Main Board");
+        Serial.println("❌ S3 failed — URL not sent to Main Board");
     }
 
     Serial.println("Capture cycle complete.");
 }
 
-// ── MQTT CALLBACK ─────────────────────────────────────────
 // ── MQTT CALLBACK ─────────────────────────────────────────
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
     Serial.print("MQTT message on topic: ");
@@ -192,16 +175,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     if (crackDetected) {
         Serial.println("MQTT crack trigger received!");
         captureRequested = true;
-        lastCapture = millis(); // update cooldown timer
-    }
-}
-// ── INTERRUPT ────────────────────────────────────────────
-void IRAM_ATTR onHardwareTrigger() {
-    static unsigned long lastTrigger = 0;
-    unsigned long now = millis();
-    if (now - lastTrigger > 10000) { // 10 second cooldown
-        captureRequested = true;
-        lastTrigger = now;
+        lastCapture = millis();
     }
 }
 
@@ -215,14 +189,14 @@ void connectAWS() {
     mqttClient.setServer(aws_endpoint, 8883);
     mqttClient.setCallback(mqttCallback);
 
-    int attempts = 0;
+    int attempts = 0;   // ← FIXED: declared here
     Serial.print("Connecting to AWS IoT");
     while (!mqttClient.connect("ESP32_CAM")) {
         Serial.print(".");
         delay(1000);
         attempts++;
         if (attempts >= 10) {
-            Serial.println("\nAWS connect FAILED after 10 attempts. Restarting...");
+            Serial.println("\nAWS connect FAILED. Restarting...");
             ESP.restart();
         }
     }
@@ -246,11 +220,38 @@ void setup() {
     Serial.println("  ESP32-CAM Boot (GC2145)  ");
     Serial.println("============================");
 
-    if (!initCamera()) {
-        Serial.println("Camera failed. Restarting in 5s...");
+    // Camera config
+    camera_config_t config;
+    config.ledc_channel = LEDC_CHANNEL_0;
+    config.ledc_timer   = LEDC_TIMER_0;
+    config.pin_d0       = Y2_GPIO_NUM;
+    config.pin_d1       = Y3_GPIO_NUM;
+    config.pin_d2       = Y4_GPIO_NUM;
+    config.pin_d3       = Y5_GPIO_NUM;
+    config.pin_d4       = Y6_GPIO_NUM;
+    config.pin_d5       = Y7_GPIO_NUM;
+    config.pin_d6       = Y8_GPIO_NUM;
+    config.pin_d7       = Y9_GPIO_NUM;
+    config.pin_xclk     = XCLK_GPIO_NUM;
+    config.pin_pclk     = PCLK_GPIO_NUM;
+    config.pin_vsync    = VSYNC_GPIO_NUM;
+    config.pin_href     = HREF_GPIO_NUM;
+    config.pin_sccb_sda = SIOD_GPIO_NUM;  // ← FIXED: sccb not sscb
+    config.pin_sccb_scl = SIOC_GPIO_NUM;  // ← FIXED: sccb not sscb
+    config.pin_pwdn     = PWDN_GPIO_NUM;
+    config.pin_reset    = RESET_GPIO_NUM;
+    config.xclk_freq_hz = 20000000;
+    config.pixel_format = PIXFORMAT_RGB565;
+    config.frame_size   = FRAMESIZE_QVGA;
+    config.jpeg_quality = 12;
+    config.fb_count     = 1;
+
+    if (esp_camera_init(&config) != ESP_OK) {
+        Serial.println("Camera init FAILED. Restarting...");
         delay(5000);
         ESP.restart();
     }
+    Serial.println("Camera init SUCCESS (GC2145 RGB565 mode)");
 
     // WiFi
     WiFi.mode(WIFI_STA);
@@ -269,7 +270,7 @@ void setup() {
     Serial.println("\nWiFi Connected ✅");
     Serial.println("IP: " + WiFi.localIP().toString());
 
-    // Time sync — required for HTTPS
+    // Time sync
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
     Serial.print("Syncing time");
     while (time(nullptr) < 100000) {
@@ -278,29 +279,24 @@ void setup() {
     }
     Serial.println("\nTime synced ✅");
 
-   connectAWS();
+    connectAWS();
     Serial.println("\n>>> Ready. Waiting for trigger...\n");
-    // ← NOTHING ELSE HERE
-
 }
 
 // ── LOOP ──────────────────────────────────────────────────
 void loop() {
-    // Maintain MQTT connection
     if (!mqttClient.connected()) {
         Serial.println("MQTT disconnected. Reconnecting...");
         connectAWS();
     }
     mqttClient.loop();
 
-    // Handle capture trigger
     if (captureRequested) {
         captureRequested = false;
-        Serial.println("\n🚨 Trigger received! Capturing...");
+        Serial.println("\n🚨 TRIGGER ACTIVATED! Capturing...");
         captureAndSend();
     }
 
-    // Manual test via Serial
     if (Serial.available()) {
         String cmd = Serial.readStringUntil('\n');
         cmd.trim();
